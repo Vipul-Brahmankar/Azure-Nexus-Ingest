@@ -1,0 +1,124 @@
+{
+    "name": "pl_supplychain",
+    "properties": {
+        "activities": [
+            {
+                "name": "GetMetadataList",
+                "type": "Lookup",
+                "dependsOn": [],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "source": {
+                        "type": "AzureSqlSource",
+                        "sqlReaderQuery": "SELECT * FROM ControlTable WHERE IsActive = 1",
+                        "queryTimeout": "02:00:00",
+                        "partitionOption": "None"
+                    },
+                    "dataset": {
+                        "referenceName": "DS_SQL_ControlTable",
+                        "type": "DatasetReference"
+                    },
+                    "firstRowOnly": false
+                }
+            },
+            {
+                "name": "LoopThroughPartners",
+                "type": "ForEach",
+                "dependsOn": [
+                    {
+                        "activity": "GetMetadataList",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "userProperties": [],
+                "typeProperties": {
+                    "items": {
+                        "value": "@activity('GetMetadataList').output.value",
+                        "type": "Expression"
+                    },
+                    "isSequential": false,
+                    "batchCount": 4,
+                    "activities": [
+                        {
+                            "name": "Copy Data",
+                            "type": "Copy",
+                            "dependsOn": [],
+                            "policy": {
+                                "timeout": "0.12:00:00",
+                                "retry": 0,
+                                "retryIntervalInSeconds": 30,
+                                "secureOutput": false,
+                                "secureInput": false
+                            },
+                            "userProperties": [],
+                            "typeProperties": {
+                                "source": {
+                                    "type": "BinarySource",
+                                    "storeSettings": {
+                                        "type": "AzureBlobStorageReadSettings",
+                                        "recursive": true,
+                                        "wildcardFileName": {
+                                            "value": "@item().FileNamePattern",
+                                            "type": "Expression"
+                                        },
+                                        "deleteFilesAfterCompletion": false
+                                    },
+                                    "formatSettings": {
+                                        "type": "BinaryReadSettings"
+                                    }
+                                },
+                                "sink": {
+                                    "type": "BinarySink",
+                                    "storeSettings": {
+                                        "type": "AzureBlobFSWriteSettings",
+                                        "copyBehavior": "PreserveHierarchy",
+                                        "metadata": [
+                                            {
+                                                "name": "Watermark",
+                                                "value": "$$LASTMODIFIED"
+                                            }
+                                        ]
+                                    }
+                                },
+                                "enableStaging": false
+                            },
+                            "inputs": [
+                                {
+                                    "referenceName": "DS_Binary_Source",
+                                    "type": "DatasetReference",
+                                    "parameters": {
+                                        "containerName": "@item().SourceContainer",
+                                        "folderPath": "@item().SourceFolderPath",
+                                        "fileName": "@item().FileNamePattern"
+                                    }
+                                }
+                            ],
+                            "outputs": [
+                                {
+                                    "referenceName": "DS_Binary_Dest",
+                                    "type": "DatasetReference",
+                                    "parameters": {
+                                        "containerName": "@item().DestinationContainer",
+                                        "folderPath": "@item().DestinationFolderPath"
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                }
+            }
+        ],
+        "annotations": [],
+        "lastPublishTime": "2026-02-16T19:52:14Z"
+    },
+    "type": "Microsoft.DataFactory/factories/pipelines"
+}
