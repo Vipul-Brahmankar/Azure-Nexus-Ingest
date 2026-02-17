@@ -1,0 +1,33 @@
+{
+    "name": "DS_Binary_Dest",
+    "properties": {
+        "linkedServiceName": {
+            "referenceName": "LS_InternalDest",
+            "type": "LinkedServiceReference"
+        },
+        "parameters": {
+            "containerName": {
+                "type": "string"
+            },
+            "folderPath": {
+                "type": "string"
+            }
+        },
+        "annotations": [],
+        "type": "Binary",
+        "typeProperties": {
+            "location": {
+                "type": "AzureBlobFSLocation",
+                "folderPath": {
+                    "value": "@dataset().folderPath",
+                    "type": "Expression"
+                },
+                "fileSystem": {
+                    "value": "@dataset().containerName",
+                    "type": "Expression"
+                }
+            }
+        }
+    },
+    "type": "Microsoft.DataFactory/factories/datasets"
+}
