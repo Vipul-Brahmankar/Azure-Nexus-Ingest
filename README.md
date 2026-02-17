@@ -141,7 +141,7 @@ We chose **Binary** datasets over parsing formats (like CSV/JSON) during the cop
 
 ## 📝 Author
 
-**Vipul Brahmankar**
+**Vipul Brahmankar** |
 *Data Engineer | Azure Cloud Specialist*
 
 ---
